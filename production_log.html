@@ -1,0 +1,1405 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>제품 생산 및 출고 일지</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Malgun Gothic','맑은 고딕',sans-serif; font-size:12px; background:#f5f5f5; color:#333; }
+
+/* Header */
+.header { background:#fff; border-bottom:1px solid #e0e0e0; padding:8px 16px; display:flex; align-items:center; justify-content:space-between; }
+.header-left { display:flex; align-items:center; gap:10px; }
+.logo-badge { background:#4CAF50; color:#fff; font-size:11px; font-weight:bold; padding:3px 7px; border-radius:3px; }
+.header-title { font-size:14px; font-weight:bold; }
+.header-sub { font-size:11px; color:#888; margin-top:1px; }
+.header-right { display:flex; gap:8px; }
+.btn { padding:6px 14px; border:none; border-radius:4px; cursor:pointer; font-size:12px; display:flex; align-items:center; gap:4px; font-family:inherit; }
+.btn-primary { background:#1976D2; color:#fff; } .btn-primary:hover { background:#1565C0; }
+.btn-secondary { background:#fff; color:#555; border:1px solid #ccc; } .btn-secondary:hover { background:#f5f5f5; }
+
+/* Summary */
+.summary-section { padding:12px 16px; background:#fff; border-bottom:1px solid #e0e0e0; }
+.summary-cards { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+.summary-card { border:1px solid #e0e0e0; border-radius:6px; padding:12px 16px; }
+.summary-card-label { font-size:11px; color:#888; margin-bottom:6px; }
+.summary-card-value { font-size:22px; font-weight:bold; }
+
+/* Controls */
+.controls { padding:10px 16px; background:#fff; border-bottom:1px solid #e0e0e0; display:flex; align-items:center; justify-content:space-between; }
+.date-area { display:flex; align-items:center; gap:8px; }
+.date-input { border:1px solid #ccc; border-radius:4px; padding:5px 8px; font-size:12px; font-family:inherit; }
+select { border:1px solid #ccc; border-radius:4px; padding:4px 6px; font-size:11px; font-family:inherit; background:#fff; }
+
+/* Notice */
+.notice-banner { margin:10px 16px; background:#FFF3E0; border:1px solid #FFB74D; border-radius:4px; padding:8px 16px; font-size:12px; color:#E65100; }
+
+/* Current cat bar */
+.current-cat-bar { margin:0 16px 6px; padding:6px 12px; background:#E3F2FD; border:1px solid #90CAF9; border-radius:4px; font-size:11px; color:#1565C0; display:flex; align-items:center; justify-content:space-between; }
+.current-cat-bar strong { font-size:12px; }
+
+/* Table */
+.table-section { margin:0 16px 12px; }
+.table-header { display:flex; align-items:center; justify-content:space-between; padding:8px 0; }
+.table-title { font-size:12px; font-weight:bold; }
+.table-actions { display:flex; gap:6px; }
+.btn-small { padding:5px 10px; border:1px solid #ccc; border-radius:4px; background:#fff; cursor:pointer; font-size:11px; font-family:inherit; }
+.btn-small:hover { background:#f0f0f0; }
+.btn-blue  { background:#1976D2; color:#fff; border-color:#1976D2; } .btn-blue:hover  { background:#1565C0!important; }
+.btn-green { background:#388E3C; color:#fff; border-color:#388E3C; } .btn-green:hover { background:#2E7D32!important; }
+.btn-orange{ background:#F57C00; color:#fff; border-color:#F57C00; } .btn-orange:hover{ background:#E65100!important; }
+
+.main-table { width:100%; border-collapse:collapse; background:#fff; border:1px solid #e0e0e0; font-size:11px; }
+.main-table th { background:#F5F5F5; border:1px solid #e0e0e0; padding:7px 6px; text-align:center; font-weight:600; color:#444; white-space:nowrap; }
+.main-table td { border:1px solid #e8e8e8; padding:5px 6px; text-align:center; }
+.main-table tr.data-row:hover td { background:#f8f9fa; }
+.col-product { text-align:left!important; padding-left:10px!important; min-width:120px; }
+.input-cell { border:none; text-align:center; background:transparent; font-size:11px; font-family:inherit; outline:none; width:38px; }
+.input-cell:focus { background:#E3F2FD; border-radius:3px; }
+.note-btn { padding:3px 8px; background:#fff; border:1px solid #ccc; border-radius:3px; cursor:pointer; font-size:10px; color:#555; font-family:inherit; }
+.note-btn:hover { background:#e8f4ff; color:#1976D2; border-color:#90CAF9; }
+
+/* Cat grid */
+.cat-section { margin:0 16px 16px; }
+.cat-label { font-size:11px; font-weight:bold; color:#555; margin-bottom:6px; }
+.cat-grid { display:grid; grid-template-columns:repeat(6,1fr); border:1px solid #ccc; border-radius:6px; overflow:hidden; }
+.cat-cell { padding:9px 8px; text-align:center; cursor:pointer; font-size:11px; font-weight:600; color:#555; background:#f0f0f0; border-right:1px solid #ccc; border-bottom:1px solid #ccc; user-select:none; transition:background .13s,color .13s; line-height:1.3; }
+.cat-cell:nth-child(6n) { border-right:none; }
+.cat-cell:nth-child(n+7) { border-bottom:none; }
+.cat-cell:hover { background:#dce8f5; color:#1565C0; }
+.cat-cell.active { background:#1976D2; color:#fff; font-weight:700; }
+.cat-cell.active:hover { background:#1565C0; }
+.cat-count { display:block; font-size:9px; font-weight:normal; margin-top:2px; opacity:.7; }
+
+/* ── 팝업 공통 ── */
+.overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.35); z-index:1000; align-items:center; justify-content:center; }
+.overlay.show { display:flex; }
+.modal { background:#fff; border-radius:8px; box-shadow:0 8px 32px rgba(0,0,0,.22); display:flex; flex-direction:column; animation:popIn .16s ease; max-height:90vh; }
+@keyframes popIn { from{transform:scale(.93);opacity:0} to{transform:scale(1);opacity:1} }
+.modal-header { padding:14px 16px 10px; border-bottom:1px solid #eee; display:flex; align-items:flex-start; justify-content:space-between; }
+.modal-title { font-size:13px; font-weight:bold; color:#1976D2; }
+.modal-sub { font-size:10px; color:#aaa; margin-top:3px; }
+.modal-close { background:none; border:none; cursor:pointer; font-size:20px; color:#bbb; line-height:1; padding:0 2px; }
+.modal-close:hover { color:#555; }
+.modal-body { padding:14px 16px; overflow-y:auto; flex:1; }
+.modal-footer { padding:10px 16px; border-top:1px solid #eee; display:flex; gap:8px; justify-content:flex-end; flex-wrap:wrap; }
+
+/* 목록 수정 팝업 */
+.item-list { list-style:none; }
+.item-list li { display:flex; align-items:center; gap:5px; padding:4px 2px; border-bottom:1px solid #f5f5f5; border-radius:3px; transition:background .12s; }
+.item-list li:last-child { border-bottom:none; }
+.item-list li.drag-over-top { border-top:2px solid #1976D2 !important; }
+.item-list li.dragging { opacity:0.35; background:#f0f4ff; }
+.drag-handle { cursor:grab; color:#ccc; font-size:15px; padding:0 2px; flex-shrink:0; user-select:none; line-height:1; }
+.drag-handle:hover { color:#888; }
+.drag-handle:active { cursor:grabbing; }
+.item-idx { font-size:10px; color:#ccc; width:16px; text-align:right; flex-shrink:0; }
+.item-input { flex:1; border:1px solid #e0e0e0; border-radius:4px; padding:4px 7px; font-size:12px; font-family:inherit; outline:none; }
+.item-input:focus { border-color:#1976D2; background:#E8F5FF; }
+.item-del { background:none; border:none; cursor:pointer; color:#e0e0e0; font-size:15px; padding:0 3px; transition:color .1s; flex-shrink:0; }
+.item-del:hover { color:#e53935; }
+.add-section { margin-top:12px; padding-top:10px; border-top:1px dashed #e0e0e0; }
+.add-section-title { font-size:10px; color:#888; margin-bottom:6px; }
+.add-main-row { display:flex; gap:6px; margin-bottom:6px; }
+.add-input { flex:1; border:1px solid #ccc; border-radius:4px; padding:5px 8px; font-size:12px; font-family:inherit; outline:none; }
+.add-input:focus { border-color:#1976D2; }
+.add-pos-row { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.add-pos-label { font-size:11px; color:#555; white-space:nowrap; }
+.add-pos-input { width:48px; border:1px solid #ccc; border-radius:4px; padding:4px 6px; font-size:11px; text-align:center; font-family:inherit; outline:none; }
+.add-pos-input:focus { border-color:#1976D2; }
+.add-pos-hint { font-size:10px; color:#aaa; }
+.add-btn { padding:5px 13px; background:#1976D2; color:#fff; border:none; border-radius:4px; cursor:pointer; font-size:11px; font-family:inherit; white-space:nowrap; }
+.add-btn:hover { background:#1565C0; }
+.add-btn:hover { background:#1565C0; }
+.empty-msg { text-align:center; color:#bbb; font-size:11px; padding:20px 0; }
+
+/* 메모 팝업 */
+.memo-textarea { width:100%; height:100px; border:1px solid #ccc; border-radius:4px; padding:8px; font-size:12px; font-family:inherit; resize:vertical; outline:none; }
+.memo-textarea:focus { border-color:#1976D2; }
+
+/* 기록 팝업 */
+.record-table { width:100%; border-collapse:collapse; font-size:11px; }
+.record-table th { background:#f5f5f5; border:1px solid #e0e0e0; padding:6px 8px; text-align:center; font-weight:600; }
+.record-table td { border:1px solid #e8e8e8; padding:5px 8px; text-align:center; }
+.record-table tr:hover td { background:#f8f9fa; }
+.record-empty { text-align:center; color:#bbb; padding:30px; font-size:12px; }
+
+/* 설정 팝업 */
+.setting-row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid #f5f5f5; }
+.setting-row:last-child { border-bottom:none; }
+.setting-label { font-size:12px; color:#444; font-weight:500; }
+.setting-desc { font-size:10px; color:#aaa; margin-top:2px; }
+.toggle { position:relative; display:inline-block; width:40px; height:22px; }
+.toggle input { opacity:0; width:0; height:0; }
+.slider { position:absolute; cursor:pointer; inset:0; background:#ccc; border-radius:22px; transition:.3s; }
+.slider:before { position:absolute; content:""; height:16px; width:16px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:.3s; }
+input:checked + .slider { background:#1976D2; }
+input:checked + .slider:before { transform:translateX(18px); }
+
+/* 총입력 팝업 */
+.bulk-section { margin-bottom:12px; }
+.bulk-section-title { font-size:11px; font-weight:bold; color:#555; margin-bottom:6px; padding-bottom:4px; border-bottom:1px solid #eee; }
+.bulk-grid { display:grid; grid-template-columns:1fr 80px; gap:6px 10px; align-items:center; }
+.bulk-name { font-size:11px; color:#444; }
+.bulk-input { border:1px solid #ccc; border-radius:4px; padding:4px 6px; font-size:11px; text-align:center; font-family:inherit; outline:none; width:100%; }
+.bulk-input:focus { border-color:#1976D2; }
+
+/* btn variants */
+.btn-save   { background:#388E3C; color:#fff; border:none; border-radius:4px; padding:5px 14px; cursor:pointer; font-size:11px; font-family:inherit; }
+.btn-save:hover { background:#2E7D32; }
+.btn-cancel { background:#fff; color:#555; border:1px solid #ccc; border-radius:4px; padding:5px 14px; cursor:pointer; font-size:11px; font-family:inherit; }
+.btn-cancel:hover { background:#f5f5f5; }
+.btn-danger { background:#e53935; color:#fff; border:none; border-radius:4px; padding:5px 14px; cursor:pointer; font-size:11px; font-family:inherit; }
+.btn-danger:hover { background:#c62828; }
+
+/* 판매가 입력 */
+.price-input { border:none; text-align:right; background:transparent; font-size:11px; font-family:inherit; outline:none; width:72px; min-width:60px; display:block; color:#555; padding:4px 6px; }
+.price-input:focus { background:#FFF9C4; border-radius:3px; }
+.price-input:hover { background:#FFFDE7; border-radius:3px; }
+
+/* 결산 팝업 */
+.sett-tab { padding:10px 20px; border:none; background:transparent; cursor:pointer; font-size:12px; font-family:inherit; font-weight:600; color:#666; border-bottom:3px solid transparent; transition:all .2s; }
+.sett-tab:hover { background:#e8f0fe; color:#1976D2; }
+.sett-tab.active { color:#1976D2; border-bottom:3px solid #1976D2; background:#fff; }
+.sett-group { margin-bottom:18px; }
+.sett-group-title { font-size:12px; font-weight:bold; color:#1976D2; padding:8px 12px; background:#E3F2FD; border-radius:4px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; }
+.sett-table { width:100%; border-collapse:collapse; font-size:11px; }
+.sett-table th { background:#F5F5F5; border:1px solid #e0e0e0; padding:6px 10px; text-align:center; font-weight:600; color:#444; }
+.sett-table td { border:1px solid #e8e8e8; padding:5px 10px; }
+.sett-table td:first-child { text-align:left; }
+.sett-table td:not(:first-child) { text-align:right; }
+.sett-table tr:hover td { background:#f8f9fa; }
+.sett-subtotal td { background:#FFF3E0!important; font-weight:bold; }
+.sett-grand td { background:#E3F2FD!important; font-weight:bold; font-size:12px; }
+
+/* toast */
+.toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:#323232; color:#fff; padding:9px 20px; border-radius:6px; font-size:12px; z-index:9999; opacity:0; transition:opacity .3s; pointer-events:none; white-space:nowrap; }
+.toast.show { opacity:1; }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <div class="header-left">
+    <span class="logo-badge">생</span>
+    <div>
+      <div class="header-title">제품 생산 및 출고 일지</div>
+      <div class="header-sub" id="headerSub"></div>
+    </div>
+  </div>
+  <div id="cloudBadge" style="font-size:11px;color:#888;display:flex;align-items:center;margin-right:4px;"></div>
+  <div class="header-right">
+    <button class="btn btn-primary" onclick="openBulkInput()">✏ 총 입력</button>
+    <button class="btn btn-secondary" onclick="openSettlement()">📊 결산</button>
+    <button class="btn btn-secondary" onclick="openRecord()">📋 기록</button>
+    <button class="btn btn-secondary" onclick="openSettings()">⚙ 설정</button>
+  </div>
+</div>
+
+<!-- Summary -->
+<div class="summary-section">
+  <div class="summary-cards">
+    <div class="summary-card"><div class="summary-card-label">오늘 입력 항목</div><div class="summary-card-value" id="sc0">0</div></div>
+    <div class="summary-card"><div class="summary-card-label">총 생산 합계</div><div class="summary-card-value" id="sc1">0</div></div>
+    <div class="summary-card"><div class="summary-card-label">총 출고 합계</div><div class="summary-card-value" id="sc2">0</div></div>
+    <div class="summary-card"><div class="summary-card-label">누적 저장일</div><div class="summary-card-value" id="sc3">0</div></div>
+  </div>
+</div>
+
+<!-- Controls -->
+<div class="controls">
+  <div class="date-area">
+    <span style="font-size:12px;color:#555;">📅 날짜</span>
+    <input type="date" class="date-input" id="dateInput" value="">
+    <select id="ampmSelect"><option>오전</option><option>오후</option></select>
+  </div>
+  <div style="font-size:11px;color:#555;">자동저장: <strong id="autoSaveLabel" style="color:#1976D2;">활성</strong>
+    &nbsp;<label class="toggle" style="vertical-align:middle;"><input type="checkbox" id="autoSaveToggle" checked onchange="toggleAutoSave()"><span class="slider"></span></label>
+  </div>
+</div>
+
+<!-- Notice -->
+<div class="notice-banner">✱ 각 항목 수량, 생산 숫자 입력 후 '저장' 눌러 주세요</div>
+
+<!-- Cat grid -->
+<div class="cat-section">
+  <div class="cat-label">📋 분류 선택 — 탭을 클릭하면 해당 분류 품목만 표시됩니다</div>
+  <div class="cat-grid" id="catGrid"></div>
+</div>
+
+<!-- Current cat bar -->
+<div class="current-cat-bar">
+  <div>📂 현재 분류: <strong id="currentCatLabel">도안(빵,파이1)</strong></div>
+  <div id="currentCatCount" style="color:#888;font-size:11px;"></div>
+</div>
+
+<!-- Table -->
+<div class="table-section">
+  <div class="table-header">
+    <div class="table-title">| 수량 입력 (단위: 개)</div>
+    <div class="table-actions">
+      <button class="btn-small" onclick="openEditItems()">✏ 목록·항목 수정</button>
+      <button class="btn-small btn-orange" onclick="confirmReset()">+ 초기화</button>
+      <button class="btn-small btn-green" onclick="exportCSV()">↓ CSV</button>
+      <button class="btn-small btn-blue" onclick="saveData()">💾 저장</button>
+    </div>
+  </div>
+  <table class="main-table">
+    <thead>
+      <tr>
+        <th style="width:28px;"></th>
+        <th class="col-product">제품명</th>
+        <th style="background:#FFF9C4;white-space:nowrap;min-width:80px;">판매가(원)</th>
+        <th style="background:#BBDEFB;">생산</th>
+        <th>둔산점</th>
+        <th>갤러리아점</th>
+        <th>도안점</th>
+        <th>건양대점</th>
+        <th>유성점</th>
+        <th>둔곡점</th>
+        <th style="background:#FFEBEE;">포장실</th>
+        <th>비고</th>
+      </tr>
+    </thead>
+    <tbody id="tableBody"></tbody>
+  </table>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     팝업 1: 목록·항목 수정
+════════════════════════════════════════════ -->
+<div class="overlay" id="editOverlay" onclick="overlayClick(event,'editOverlay')">
+  <div class="modal" style="width:440px;">
+    <div class="modal-header">
+      <div><div class="modal-title" id="editModalTitle">📂 품목 수정</div><div class="modal-sub">추가·삭제·이름 수정 후 저장하세요</div></div>
+      <button class="modal-close" onclick="closeModal('editOverlay')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="font-size:10px;color:#aaa;margin-bottom:6px;">⠿ 드래그로 순서 변경 &nbsp;|&nbsp; 아래에서 원하는 위치에 추가</div>
+      <ul class="item-list" id="editItemList"></ul>
+      <div id="editEmpty" class="empty-msg" style="display:none;">품목이 없습니다. 아래에서 추가하세요.</div>
+      <div class="add-section">
+        <div class="add-section-title">✚ 새 품목 추가</div>
+        <div class="add-main-row">
+          <input type="text" class="add-input" id="addItemInput" placeholder="품목명 입력 후 추가 또는 Enter">
+          <button class="add-btn" onclick="addItem()">+ 추가</button>
+        </div>
+        <div class="add-pos-row">
+          <span class="add-pos-label">삽입 위치:</span>
+          <input type="number" class="add-pos-input" id="addPosInput" min="1" placeholder="번호">
+          <span class="add-pos-hint">번째 앞에 삽입 (비우면 맨 아래에 추가)</span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('editOverlay')">취소</button>
+      <button class="btn-save" onclick="saveItems()">💾 저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     팝업 2: 초기화 확인
+════════════════════════════════════════════ -->
+<div class="overlay" id="resetOverlay" onclick="overlayClick(event,'resetOverlay')">
+  <div class="modal" style="width:360px;">
+    <div class="modal-header">
+      <div><div class="modal-title" style="color:#e53935;">⚠ 초기화 확인</div></div>
+      <button class="modal-close" onclick="closeModal('resetOverlay')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;line-height:1.7;color:#555;">
+        현재 분류 <strong id="resetCatName" style="color:#1976D2;"></strong>의<br>
+        모든 입력값(수량)을 <strong style="color:#e53935;">0으로 초기화</strong>합니다.<br>
+        이 작업은 되돌릴 수 없습니다.
+      </p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('resetOverlay')">취소</button>
+      <button class="btn-danger" onclick="doReset()">초기화</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     팝업 3: 메모 입력
+════════════════════════════════════════════ -->
+<div class="overlay" id="memoOverlay" onclick="overlayClick(event,'memoOverlay')">
+  <div class="modal" style="width:380px;">
+    <div class="modal-header">
+      <div><div class="modal-title">📝 메모 입력</div><div class="modal-sub" id="memoProductName"></div></div>
+      <button class="modal-close" onclick="closeModal('memoOverlay')">✕</button>
+    </div>
+    <div class="modal-body">
+      <textarea class="memo-textarea" id="memoText" placeholder="메모를 입력하세요..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('memoOverlay')">취소</button>
+      <button class="btn-save" onclick="saveMemo()">✓ 저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     팝업 4: 기록
+════════════════════════════════════════════ -->
+<div class="overlay" id="recordOverlay" onclick="overlayClick(event,'recordOverlay')">
+  <div class="modal" style="width:640px;">
+    <div class="modal-header">
+      <div><div class="modal-title">📋 저장 기록</div><div class="modal-sub">저장된 날짜별 데이터입니다</div></div>
+      <button class="modal-close" onclick="closeModal('recordOverlay')">✕</button>
+    </div>
+    <div class="modal-body" id="recordBody" style="min-height:200px;"></div>
+    <div class="modal-footer">
+      <button class="btn-danger" onclick="clearAllRecords()">🗑 전체 삭제</button>
+      <button class="btn-cancel" onclick="closeModal('recordOverlay')">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     팝업 5: 설정
+════════════════════════════════════════════ -->
+<div class="overlay" id="settingsOverlay" onclick="overlayClick(event,'settingsOverlay')">
+  <div class="modal" style="width:400px;">
+    <div class="modal-header">
+      <div><div class="modal-title">⚙ 설정</div></div>
+      <button class="modal-close" onclick="closeModal('settingsOverlay')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="setting-row" style="flex-direction:column;align-items:flex-start;gap:8px;">
+        <div><div class="setting-label">☁️ 클라우드 동기화 설정</div><div class="setting-desc">JSONBin.io 무료 계정으로 모든 기기에서 자동 동기화</div></div>
+        <div style="width:100%;background:#f8f9fa;border-radius:6px;padding:10px;font-size:11px;color:#555;line-height:1.7;">
+          <b>설정 방법:</b><br>
+          1. <a href="https://jsonbin.io" target="_blank" style="color:#1976D2;">jsonbin.io</a> 접속 → 무료 회원가입<br>
+          2. 우상단 API Keys → Master Key 복사<br>
+          3. Bins → Create a Bin 클릭 → Bin ID 복사<br>
+          4. 아래에 붙여넣기 후 저장
+        </div>
+        <div style="width:100%;display:flex;flex-direction:column;gap:6px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:11px;color:#555;width:70px;flex-shrink:0;">API Key</span>
+            <input type="password" id="inputApiKey" placeholder="$2a$10$..." style="flex:1;border:1px solid #ccc;border-radius:4px;padding:5px 8px;font-size:11px;font-family:inherit;outline:none;">
+            <button onclick="toggleApiKeyVis()" style="padding:4px 8px;border:1px solid #ccc;border-radius:4px;background:#fff;cursor:pointer;font-size:10px;">👁</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:11px;color:#555;width:70px;flex-shrink:0;">Bin ID</span>
+            <input type="text" id="inputBinId" placeholder="64a3b2c1e3a..." style="flex:1;border:1px solid #ccc;border-radius:4px;padding:5px 8px;font-size:11px;font-family:inherit;outline:none;">
+          </div>
+          <div style="display:flex;gap:6px;margin-top:4px;">
+            <button onclick="saveCloudSettings()" style="flex:1;padding:6px;background:#1976D2;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit;">💾 저장</button>
+            <button onclick="testCloudConnection()" style="flex:1;padding:6px;background:#388E3C;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit;">🔗 연결 테스트</button>
+            <button onclick="autoCreateBin()" style="flex:1;padding:6px;background:#F57C00;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px;font-family:inherit;">✨ 자동 생성</button>
+          </div>
+          <div id="cloudStatus" style="font-size:10px;color:#888;min-height:16px;"></div>
+        </div>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">자동 저장</div><div class="setting-desc">입력 후 자동으로 데이터를 저장합니다</div></div>
+        <label class="toggle"><input type="checkbox" id="settingAutoSave" checked onchange="document.getElementById('autoSaveToggle').checked=this.checked;toggleAutoSave()"><span class="slider"></span></label>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">날짜 표시 형식</div><div class="setting-desc">헤더에 표시되는 날짜 형식</div></div>
+        <select id="dateFmtSelect" onchange="updateHeaderDate()">
+          <option value="kr">2026년 03월 16일</option>
+          <option value="slash">2026/03/16</option>
+          <option value="dash">2026-03-16</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">누적 저장일 초기화</div><div class="setting-desc">저장일 카운트를 0으로 리셋합니다</div></div>
+        <button class="btn-danger" onclick="resetSavedDays()" style="font-size:11px;">초기화</button>
+      </div>
+      <div class="setting-row">
+        <div><div class="setting-label">모든 데이터 초기화</div><div class="setting-desc">저장된 모든 기록과 품목을 삭제합니다</div></div>
+        <button class="btn-danger" onclick="resetAllData()" style="font-size:11px;">전체 초기화</button>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-save" onclick="closeModal('settingsOverlay')">확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     팝업 6: 총 입력
+════════════════════════════════════════════ -->
+<div class="overlay" id="bulkOverlay" onclick="overlayClick(event,'bulkOverlay')">
+  <div class="modal" style="width:500px;">
+    <div class="modal-header">
+      <div><div class="modal-title">✏ 총 입력</div><div class="modal-sub">모든 분류의 생산 수량을 한 번에 입력합니다</div></div>
+      <button class="modal-close" onclick="closeModal('bulkOverlay')">✕</button>
+    </div>
+    <div class="modal-body" id="bulkBody" style="max-height:60vh;overflow-y:auto;"></div>
+    <div class="modal-footer">
+      <button class="btn-cancel" onclick="closeModal('bulkOverlay')">취소</button>
+      <button class="btn-save" onclick="applyBulk()">✓ 적용</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════════════════════════════
+     팝업 7: 결산
+════════════════════════════════════════════ -->
+<div class="overlay" id="settlementOverlay" onclick="overlayClick(event,'settlementOverlay')">
+  <div class="modal" style="width:860px;max-width:98vw;">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">📊 지점별 한달 결산</div>
+        <div class="modal-sub" id="settlementMonthLabel">각 지점의 제품별 출고량 × 판매가 기준 월 결산</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('settlementOverlay')">✕</button>
+    </div>
+    <div class="modal-body" style="padding:0;max-height:78vh;overflow-y:auto;">
+      <!-- 탭 -->
+      <div style="display:flex;border-bottom:2px solid #e0e0e0;background:#fafafa;position:sticky;top:0;z-index:10;">
+        <button class="sett-tab active" id="sttab-도안점"   onclick="selectSettTab('도안점')">🏪 도안점</button>
+        <button class="sett-tab"        id="sttab-둔산점"   onclick="selectSettTab('둔산점')">🏪 둔산점</button>
+        <button class="sett-tab"        id="sttab-갤러리아점" onclick="selectSettTab('갤러리아점')">🏪 갤러리아점</button>
+      </div>
+      <div id="settlementContent" style="padding:16px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-save" style="background:#1976D2;" onclick="exportSettlementCSV()">↓ CSV 내보내기</button>
+      <button class="btn-cancel" onclick="closeModal('settlementOverlay')">닫기</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════
+// 데이터 초기화
+// ══════════════════════════════════════════
+const CATS = [
+  "도안(빵,파이1)","도안(빵,파이2)","도안(케익)",
+  "공방","마카롱,다쿠아즈","쿠키,쨈",
+  "둔산(빵,파이1)","둔산(빵,파이2)","둔산(케익)",
+  "갤러리아(빵,파이1)","갤러리아(빵,파이2)","갤러리아(케익)"
+];
+
+const COLS = ["생산","둔산점","갤러리아점","도안점","건양대점","유성점","둔곡점","포장실"];
+
+// ── 판매가 (제품명 → 원) ──
+let PRICES = {};
+function loadPrices()  {
+  try {
+    // production_log(3) 키
+    const s = localStorage.getItem('priceData');
+    if (s) PRICES = JSON.parse(s);
+    // production_log(1) 키 — 없으면 병합 시도
+    const legacy = localStorage.getItem('customPrices');
+    if (legacy) {
+      const lp = JSON.parse(legacy);
+      // 기존에 없는 항목만 추가 (덮어쓰기 방지)
+      Object.keys(lp).forEach(k => { if (!PRICES[k]) PRICES[k] = lp[k]; });
+      // 통합된 데이터를 priceData에 저장
+      localStorage.setItem('priceData', JSON.stringify(PRICES));
+    }
+  } catch(e) {}
+}
+function savePrices()  { try { localStorage.setItem('priceData', JSON.stringify(PRICES)); } catch(e){} }
+loadPrices();
+
+// 분류별 품목 (로컬스토리지에서 불러오거나 기본값)
+function defaultCatData() {
+  return {
+    "도안(빵,파이1)": ["크랜베리롤치즈캄파뉴","콘치즈캄파뉴","감자치아바타","올리브치아","넛츠스틱","모닝빵","파이만주","마늘홀릭","뽀드득소세지","야채소세지빵","명장팥빵","소금빵","스트링치즈소금빵","커피번","에그타르트","모카빵","소보로빵","팥고구마식빵","에그소금빵","무화과치아바타","바질토마토","명란소금빵","올리브베이글","블루베리베이글","명란파빵","양파빵","쌀캄파뉴","무가당빵(팥)","무가당빵(듀럼)","무가담빵(코코넛)","올리브맛도리","피자부어스트","초코바게트","모짜파니니","찹쌀떡 품은 소금빵"],
+    "도안(빵,파이2)": ["못난이녹차인절미","찹쌀꽈배기","어니언베이글","추억의밤모스","애플데니쉬","몽블랑","쑥설기","츄러스","쪽파프리글","생도넛","갈릭몽블랑","야끼소바","우유폭탄","계절과일팡도르","화이트롤","시나몬브레드","레몬시트롱","메론크림빵","초코소라빵","라구피자","오키나와","모구모구 화이트","모구모구 초코","말차인절미","딸기모찌","초코 산딸기","계절과일 몽블랑","계절과일 크로와상","두바이 쫀득 쿠키","생크림 모카번","두바이 에그타르트","슈크림 붕어빵","딸기 품은 크붕이","가나슈 초코 바게트","식빵러스크(체크만)","마늘빵(체크만)"],
+    "도안(케익)": ["계절생크림1호","계절생크림2호","계절생크림3호","토끼","블루베리케익","쇼콜라하트케익","키리쉬1호","키리쉬2호","키리쉬3호","딸기밭","쌀로만든과일밭","모둠타르트","초코밭테디","제리의 치즈케이크","하레치즈 케이크","순수우유롤(H)","순수우유롤(P)","순수망고롤(H)","순수망고롤(P)","미니티라미스","미니딸기티라미스","미니망고티라","미니크림치즈과일타르트","제리치즈(조각)","미니 아메르","더블치즈케이크","마시멜로우 속 캬또","꿈씨의포근하레","미니과일밭","미니키리쉬","딸망밭","두바이 마시멜로우","두바이 딸기범벅"],
+    "공방": ["닭가슴살 샐러드","매콤닭가슴살 샌드위치","비어햄 샌드위치","반미 샌드위치","에그&햄 샌드위치","에그 샌드위치","햄 샌드위치","포카치아 샌드위치","두부치아바타 버거","햄치즈 치아바타","새우바질페스토치아바타","치키BBQ치아바타","우유식빵","하레식빵","48시간 호밀빵","통밀빵","햄에그토스트","호두과자","하레치즈","100%호밀빵","초코모찌롤","바게트","호두바게트","레몬시트롱","휘낭시에","호두찰식빵","크로와상","파니니","어니언베이글","버터떡"],
+    "마카롱,다쿠아즈": ["마카롱류","버터롤","모카롤","호두파운드","오렌지파운드","쇼콜라오랑쥬","찹쌀카스테라","팥카스테라","아몬드캬라멜파운드","벌꿀카스테라","우유모찌롤","초코모찌롤","말차모찌롤","파네토네","호두쉬폰","쌀쉬폰","밀봉","초코우유마들렌","우유마들렌","쌀치즈카스테라","대전샌드 카라멜","대전샌드 딸기","밀크스틱","호두과자","휘낭시에","레몬시트롱","미니당근","미니초코산딸기","미니오렌지살구","미니살라망드","식빵러스크","하레러스크","아그작러스크"],
+    "쿠키,쨈": ["곰돌이쿠키","하트쿠키","복샌드쿠키","말쿠키","브로드네쥬","코코넛쿠키","로얄쇼콜라","세자무","샤브레","초코샤브레","쉘","뽀로","땅콩쿠키","쇼콜라프로겐트","치즈스틱","크랜베리쿠키","바통","모카초코칩쿠키","오트밀초코쿠키","카페브릭","메종쿠키","샤브레티쿠키","생초콜릿(다크)","쑥인절미","하레치즈볼","병딸기쨈","쫀득쿠키"],
+    "둔산(빵,파이1)": ["감자치아바타","올리브치아바타","미니쌀식빵","우유식빵","팡도미","통밀식빵","크랜베리식빵","로겐호밀빵","공주알밤식빵","모닝빵","애플파이","크로와상","레몬크로와상","소금빵","어니언베이글","추억의밤모스","명장팥빵","버터크림빵","야채소세지빵","갈릭토스트","우유마들렌","초코우유마들렌","우유폭탄","생도넛","바질소금빵","야끼소바빵","감자베이컨","쌀치즈카스테라","살라망드","뽀로","쉘","러스크","생크림커피번","빵오초코","명란감자빵","쨈치즈꼬다리","완두앙금빵","초코가나슈빵","딸기붕어","슈크림붕어","딸기모찌","두바이 에그타르트","두바이 쫀득 쿠키","쌀단팥빵"],
+    "둔산(빵,파이2)": ["몽블랑","못난이녹차인절미","뽀드득소세지","마늘홀릭","파이만주","플레인스콘","얼그레이스콘","찹쌀꽈배기","고로케","소보로","팥도넛","커피번","바질토마토","연탄빵","에그타르트","사과크럼블타르트","쪽파프리글","어니언크림","명란소금빵","리얼우유크림도넛","시나몬브레드","단짠단짠양파빵","블루베리치즈번","쫀득감자빵","갈릭소세지데니쉬","깜빵","계절과일팡도르","메론크림빵","찰옥수수빵","쌀꽈배기","태산앙금팥빵","딸기파이","고구마듬뿍페스츄리","월넛크림브레드","무가담빵","쌀캄파뉴","포카치아샌드위치","모구모구","초코 모구모구"],
+    "둔산(케익)": ["계절생크림1호","계절생크림2호","계절생크림3호","강아지케이크","곰돌이케이크","망고밭","블루베리케익","키리쉬1호","키리쉬2호","키리쉬3호","쇼콜라하트케익","딸기밭","크림치즈딸기타르트","쌀로만든딸기밭","미니망고","쇼콜라테디","크럼블레어","망고케이크","커피카라멜","제리의 치즈케이크","딸기몽블랑","그래놀라요거트","생체리초코케이크","체리치즈(조각)","피치요거트케이크","요거! 귤 케이크","미니! 귤 케이크","무화과케이크","초코쏙테디","딸망밭","쁘띠초코밭","쌀과일밭","모둠타르트","미니피치","샤인밭","미니망고","미니망고티라","미니티라","미니딸기티라","눈사람","고백하레"],
+    "갤러리아(빵,파이1)": ["크랜베리롤치즈캄파뉴","감자치아바타","올리브치아바타","쌀식빵","우유식빵","팡도미식빵","공주알밤식빵","모닝빵","소금빵","애플파이","크로와상","시나몬 브레드","마늘홀릭","어니언크림치즈","몽블랑","추억의맘모스빵","커피번","통밀식빵","롱뽀드득 소시지","햄치즈명란마요","바질토마토","단팥빵","야채소세지빵","파이만쥬","에그타르트","초코 마들렌","우유 마들렌","코코팡","쌀꽈배기","쪽파프리글","우유 폭탄","새우바질페스토치아바타","치킨BBQ치아바타","햄치즈 치아바타","야끼소바","에그소금빵","앙버터소금빵","할라피뇨/페페로니 프레첼","무화과 치아바타","소보로빵","양파빵","슈크림 브레산","메론빵","갈릭 베이컨","올리브 베이글","시금치 베이글","블루베리 베이글"],
+    "갤러리아(빵,파이2)": ["라구피자","당근라페 샌드위치","구름빵","연탄빵","옥수수빵","명란바게트","매콤칠리소세지","무가당 쌀캄파뉴","레몬시트롱","딸기크로와상","모구모구 화이트","모구모구 초코","두바이 쫀득 쿠키","두바이 에그타르르","땅콩 쿠키","바통쿠키"],
+    "갤러리아(케익)": ["계절생크림1호","계절생크림2호","키리쉬1호","키리쉬2호","딸기밭","딸망밭","쌀딸기밭","블루베리","초코밭테디","쇼콜라하트","미니망고티라미스","미니티라미스","미니딸기티라미스","미니밤티라미스","딸크치","초코테디","치즈테디","홀케이크","쁘띠케이크"],
+  };
+}
+
+function loadCatData() { return defaultCatData(); }
+function saveCatData() { /* 파일 자체에 내장 — saveFile()로 반영 */ }
+
+// ══════════════════════════════════════════
+// ══════════════════════════════════════════
+// Firebase Realtime Database 동기화
+// ══════════════════════════════════════════
+const FB_URL = 'https://project-production-log-default-rtdb.firebaseio.com';
+
+async function cloudLoad() {
+  try {
+    const r = await fetch(FB_URL + '/data.json');
+    if (!r.ok) return null;
+    const j = await r.json();
+    return j || null;
+  } catch(e) { return null; }
+}
+
+async function cloudSave(data) {
+  try {
+    const r = await fetch(FB_URL + '/data.json', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    return r.ok;
+  } catch(e) { return false; }
+}
+
+function loadInputData() {
+  try { const s=localStorage.getItem('inputData'); return s?JSON.parse(s):{}; } catch(e){return {};}
+}
+function saveInputData() { try{localStorage.setItem('inputData',JSON.stringify(inputData));}catch(e){} }
+function loadMemos() { try{ const s=localStorage.getItem('memos'); return s?JSON.parse(s):{}; }catch(e){return{};} }
+function saveMemos() { try{localStorage.setItem('memos',JSON.stringify(memos));}catch(e){} }
+function loadRecords() { try{ const s=localStorage.getItem('records'); return s?JSON.parse(s):[]; }catch(e){return[];} }
+function saveRecords() { try{localStorage.setItem('records',JSON.stringify(records));}catch(e){} }
+
+async function saveAll() {
+  saveInputData(); saveMemos(); saveRecords(); savePrices();
+  return await cloudSave({ inputData, memos, records, prices: PRICES });
+}
+
+async function loadFromCloud() {
+  const data = await cloudLoad();
+  if (!data) return false;
+  if (data.inputData) { inputData = data.inputData; saveInputData(); }
+  if (data.memos)     { memos = data.memos;         saveMemos(); }
+  if (data.records)   { records = data.records;     saveRecords(); }
+  if (data.prices)    {
+    // production_log(1)의 customPrices도 병합 (없는 항목만)
+    const legacy = localStorage.getItem('customPrices');
+    if (legacy) {
+      try {
+        const lp = JSON.parse(legacy);
+        Object.keys(lp).forEach(k => { if (!data.prices[k]) data.prices[k] = lp[k]; });
+      } catch(e) {}
+    }
+    PRICES = data.prices; savePrices();
+  }
+  return true;
+}
+
+let catData   = loadCatData();
+let catMeta   = {};
+let inputData = loadInputData();
+let memos     = loadMemos();
+let records   = loadRecords();
+let savedDays = 0;
+
+let currentCat = CATS[0];
+let currentMemoKey = '';
+let autoSave = true;
+
+// ══════════════════════════════════════════
+// 렌더
+// ══════════════════════════════════════════
+function renderCatGrid() {
+  const grid = document.getElementById('catGrid');
+  grid.innerHTML = '';
+  CATS.forEach(cat => {
+    const cell = document.createElement('div');
+    cell.className = 'cat-cell' + (cat===currentCat?' active':'');
+    cell.innerHTML = `${cat}<span class="cat-count">${(catData[cat]||[]).length}개 품목</span>`;
+    cell.addEventListener('click', ()=>selectCat(cat));
+    grid.appendChild(cell);
+  });
+}
+
+function selectCat(cat) {
+  currentCat = cat;
+  renderCatGrid();
+  renderMainTable();
+  updateCurrentBar();
+}
+
+function updateCurrentBar() {
+  document.getElementById('currentCatLabel').textContent = currentCat;
+  document.getElementById('currentCatCount').textContent = `총 ${(catData[currentCat]||[]).length}개 품목`;
+}
+
+function getInput(cat, name, col) {
+  return (inputData[cat]&&inputData[cat][name]&&inputData[cat][name][col]!==undefined)
+    ? inputData[cat][name][col] : 0;
+}
+function setInput(cat, name, col, val) {
+  if(!inputData[cat]) inputData[cat]={};
+  if(!inputData[cat][name]) inputData[cat][name]={};
+  inputData[cat][name][col] = val;
+}
+
+function renderMainTable() {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  const items = catData[currentCat] || [];
+
+  if (!items.length) {
+    tbody.innerHTML = `<tr><td colspan="12" style="text-align:center;padding:24px;color:#aaa;">이 분류에 등록된 품목이 없습니다. '목록·항목 수정'으로 추가하세요.</td></tr>`;
+    updateSummary(); return;
+  }
+
+  items.forEach((name, i) => {
+    const tr = document.createElement('tr');
+    tr.className = 'data-row';
+    const memoKey = currentCat+'__'+name;
+    const hasMemo = memos[memoKey] ? '💬' : '';
+
+    let cells = `<td style="color:#aaa;font-size:10px;width:28px;">${String(i+1).padStart(2,'0')}</td>`;
+    cells += `<td class="col-product">${name}</td>`;
+
+    // 판매가 셀
+    const pv = PRICES[name] || 0;
+    cells += `<td style="background:#FFFDE7;padding:0;min-width:80px;">
+      <input class="price-input" type="text" inputmode="numeric"
+        value="${pv > 0 ? pv.toLocaleString()+'원' : ''}" placeholder="—"
+        data-name="${name}" data-raw="${pv}"
+        onfocus="this.value=this.dataset.raw>0?this.dataset.raw:'';this.select();"
+        onblur="onPriceBlur(this)"
+        oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+    </td>`;
+
+    COLS.forEach((col, ci) => {
+      const v = getInput(currentCat, name, col);
+      const bg = ci===0 ? 'background:#EBF5FB;' : ci===7 ? 'background:#FFF8F8;' : '';
+      cells += `<td style="${bg}">
+        <input class="input-cell" type="number" min="0" value="${v}"
+          data-cat="${currentCat}" data-name="${name}" data-col="${col}"
+          oninput="onInputChange(this)">
+      </td>`;
+    });
+
+    cells += `<td><button class="note-btn" onclick="openMemo('${currentCat}','${name.replace(/'/g,"\\'")}','${memoKey.replace(/'/g,"\\'")}')">
+      ${hasMemo||'메모입력'}
+    </button></td>`;
+
+    tr.innerHTML = cells;
+    tbody.appendChild(tr);
+  });
+
+  updateSummary();
+}
+
+function onInputChange(el) {
+  const cat=el.dataset.cat, name=el.dataset.name, col=el.dataset.col;
+  const v = parseInt(el.value)||0;
+  setInput(cat, name, col, v);
+  updateSummary();
+  if(autoSave) { saveInputData(); scheduleCloudPush(); }
+}
+
+function updateSummary() {
+  // 현재 분류 기준
+  const items = catData[currentCat]||[];
+  let filled=0, prod=0, ship=0;
+  items.forEach(name=>{
+    COLS.forEach((col,ci)=>{
+      const v=getInput(currentCat,name,col);
+      if(v>0){ filled++; if(ci===0) prod+=v; else ship+=v; }
+    });
+  });
+  document.getElementById('sc0').textContent = filled;
+  document.getElementById('sc1').textContent = prod;
+  document.getElementById('sc2').textContent = ship;
+  document.getElementById('sc3').textContent = savedDays;
+}
+
+// ══════════════════════════════════════════
+// 날짜 — 오늘 날짜 자동 설정
+// ══════════════════════════════════════════
+function getTodayStr() {
+  const n=new Date(); const y=n.getFullYear();
+  const m=String(n.getMonth()+1).padStart(2,'0');
+  const d=String(n.getDate()).padStart(2,'0');
+  return `${y}-${m}-${d}`;
+}
+function updateHeaderDate() {
+  const val = document.getElementById('dateInput').value;
+  if (!val) return;
+  const [y,m,d] = val.split('-');
+  const fmt = document.getElementById('dateFmtSelect') ? document.getElementById('dateFmtSelect').value : 'kr';
+  let str;
+  if (fmt==='slash') str=`${y}/${m}/${d}`;
+  else if(fmt==='dash') str=`${y}-${m}-${d}`;
+  else str=`${y}년 ${m}월 ${d}일`;
+  document.getElementById('headerSub').innerHTML = `${str} &nbsp;● 시스 진행중`;
+}
+document.getElementById('dateInput').addEventListener('change', updateHeaderDate);
+// 오늘 날짜로 초기화
+(function initDate(){
+  const di = document.getElementById('dateInput');
+  di.value = getTodayStr();
+  updateHeaderDate();
+  // 설정 옵션 텍스트도 오늘 날짜로
+  const [y,m,d] = getTodayStr().split('-');
+  const op = document.getElementById('dateFmtSelect');
+  if(op){ op.options[0].text=`${y}년 ${m}월 ${d}일`; op.options[1].text=`${y}/${m}/${d}`; op.options[2].text=`${y}-${m}-${d}`; }
+})();
+// 자정 자동 갱신
+(function schedMidnight(){
+  const n=new Date(), ms=new Date(n.getFullYear(),n.getMonth(),n.getDate()+1,0,0,1)-n;
+  setTimeout(()=>{ document.getElementById('dateInput').value=getTodayStr(); updateHeaderDate(); schedMidnight(); }, ms);
+})();
+
+// ══════════════════════════════════════════
+// 판매가 blur 핸들러
+// ══════════════════════════════════════════
+function onPriceBlur(el) {
+  const name = el.dataset.name;
+  const raw = parseInt(el.value) || 0;
+  el.dataset.raw = raw;
+  if (raw > 0) { PRICES[name] = raw; el.value = raw.toLocaleString()+'원'; }
+  else         { delete PRICES[name]; el.value = ''; }
+  savePrices();
+  scheduleCloudPush();
+}
+
+// ══════════════════════════════════════════
+// 결산 기능
+// ══════════════════════════════════════════
+// 지점별 → 담당 분류 매핑
+const SETT_STORE_CATS = {
+  '도안점':    ['도안(빵,파이1)','도안(빵,파이2)','도안(케익)','공방','마카롱,다쿠아즈','쿠키,쨈'],
+  '둔산점':    ['둔산(빵,파이1)','둔산(빵,파이2)','둔산(케익)'],
+  '갤러리아점':['갤러리아(빵,파이1)','갤러리아(빵,파이2)','갤러리아(케익)'],
+};
+// 지점명 → 컬럼명 매핑
+const SETT_STORE_COL = { '도안점':'도안점', '둔산점':'둔산점', '갤러리아점':'갤러리아점' };
+
+let _currentSettTab = '도안점';
+
+function openSettlement() {
+  _currentSettTab = '도안점';
+  document.querySelectorAll('.sett-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('sttab-도안점').classList.add('active');
+  const di = document.getElementById('dateInput').value;
+  const ym = di ? di.substring(0,7).replace('-','년 ')+'월' : '';
+  document.getElementById('settlementMonthLabel').textContent = ym ? `${ym} 결산 — 출고량 × 판매가` : '각 지점의 제품별 출고량 × 판매가 기준 월 결산';
+  renderSettlement('도안점');
+  openModal('settlementOverlay');
+}
+
+function selectSettTab(store) {
+  _currentSettTab = store;
+  document.querySelectorAll('.sett-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('sttab-'+store).classList.add('active');
+  renderSettlement(store);
+}
+
+function renderSettlement(store) {
+  const cats = SETT_STORE_CATS[store] || [];
+  // 출고 컬럼 전체 (생산·포장실 제외, 모든 지점 출고 합산)
+  const OUT_COLS = ["둔산점","갤러리아점","도안점","건양대점","유성점","둔곡점","포장실"];
+  const el   = document.getElementById('settlementContent');
+  let html = '', grandQty = 0, grandAmt = 0;
+
+  cats.forEach(cat => {
+    const items = catData[cat] || [];
+    let catQty = 0, catAmt = 0, rows = '';
+    items.forEach(name => {
+      // 모든 출고 컬럼 합산
+      const qty   = OUT_COLS.reduce((sum, c) => sum + (getInput(cat, name, c) || 0), 0);
+      const price = PRICES[name] || 0;
+      const amt   = qty * price;
+      if (qty > 0) {
+        catQty += qty; catAmt += amt;
+        rows += `<tr>
+          <td>${name}</td>
+          <td>${price > 0 ? price.toLocaleString()+'원' : '<span style="color:#bbb;">미등록</span>'}</td>
+          <td style="color:#1976D2;font-weight:bold;">${qty.toLocaleString()}</td>
+          <td style="color:#388E3C;font-weight:bold;">${amt > 0 ? amt.toLocaleString()+'원' : '—'}</td>
+        </tr>`;
+      }
+    });
+    if (!rows) rows = `<tr><td colspan="4" style="text-align:center;color:#bbb;padding:10px;">출고 수량 없음</td></tr>`;
+    grandQty += catQty; grandAmt += catAmt;
+    html += `
+    <div class="sett-group">
+      <div class="sett-group-title">
+        <span>📂 ${cat}</span>
+        <span style="font-size:11px;color:#555;">${catQty.toLocaleString()}개 &nbsp;/&nbsp; ${catAmt > 0 ? catAmt.toLocaleString()+'원' : '—'}</span>
+      </div>
+      <table class="sett-table">
+        <thead><tr>
+          <th style="text-align:left;width:40%;">제품명</th>
+          <th style="width:18%;">판매가</th>
+          <th style="width:14%;">출고합계</th>
+          <th style="width:28%;">금액</th>
+        </tr></thead>
+        <tbody>${rows}
+          <tr class="sett-subtotal">
+            <td colspan="2">소 계</td>
+            <td>${catQty.toLocaleString()}개</td>
+            <td>${catAmt > 0 ? catAmt.toLocaleString()+'원' : '—'}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>`;
+  });
+
+  html += `
+  <table class="sett-table" style="margin-top:8px;">
+    <tbody>
+      <tr class="sett-grand">
+        <td style="font-size:13px;font-weight:bold;">🏆 ${store} 월 합계</td>
+        <td></td>
+        <td style="font-size:13px;">${grandQty.toLocaleString()}개</td>
+        <td style="color:#1565C0;font-size:14px;">${grandAmt > 0 ? grandAmt.toLocaleString()+'원' : '—'}</td>
+      </tr>
+    </tbody>
+  </table>`;
+
+  el.innerHTML = html;
+}
+
+function exportSettlementCSV() {
+  const store = _currentSettTab;
+  const cats  = SETT_STORE_CATS[store] || [];
+  const OUT_COLS = ["둔산점","갤러리아점","도안점","건양대점","유성점","둔곡점","포장실"];
+  const ym    = (document.getElementById('dateInput').value || '').substring(0,7);
+  let csv = '분류,제품명,판매가,출고합계,금액\n';
+  cats.forEach(cat => {
+    (catData[cat]||[]).forEach(name => {
+      const qty = OUT_COLS.reduce((sum, c) => sum + (getInput(cat, name, c) || 0), 0);
+      if (qty <= 0) return;
+      const price = PRICES[name] || 0;
+      csv += `${cat},${name},${price},${qty},${qty*price}\n`;
+    });
+  });
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = `결산_${store}_${ym}.csv`; a.click();
+  showToast(`${store} 결산 CSV 다운로드 완료`);
+}
+
+// ══════════════════════════════════════════
+// 파일로 저장 (품목 변경 영구 반영)
+// ══════════════════════════════════════════
+function saveFile() {
+  const catLines = Object.entries(catData)
+    .map(([k,v]) => '    ' + JSON.stringify(k) + ': ' + JSON.stringify(v))
+    .join(',\n');
+  const metaLines = Object.entries(catMeta)
+    .map(([k,v]) => '    ' + JSON.stringify(k) + ': ' + JSON.stringify(v))
+    .join(',\n');
+  const newCatFunc  = 'function defaultCatData() {\n  return {\n' + catLines + ',\n  };\n}';
+  const newMetaFunc = 'function defaultCatMeta() {\n  return {\n' + metaLines + '\n  };\n}';
+  let src = '<!DOCTYPE html>\n' + document.documentElement.outerHTML;
+  src = src.replace(/function defaultCatData\(\)\s*\{[\s\S]*?\n\}/, newCatFunc);
+  src = src.replace(/function defaultCatMeta\(\)\s*\{[\s\S]*?\n\}/, newMetaFunc);
+  const blob = new Blob([src], {type:'text/html;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'production_log.html'; a.click();
+  URL.revokeObjectURL(url);
+  showToast('📁 파일 저장 완료! 다운받은 파일을 앞으로 사용하세요.');
+}
+
+// ══════════════════════════════════════════
+// 저장
+// ══════════════════════════════════════════
+async function saveData() {
+  saveCatData();
+
+  // 기록 추가
+  const date = document.getElementById('dateInput').value;
+  const ampm = document.getElementById('ampmSelect').value;
+  const items = catData[currentCat]||[];
+  let prod=0, ship=0;
+  items.forEach(name=>{
+    COLS.forEach((col,ci)=>{
+      const v=getInput(currentCat,name,col);
+      if(ci===0) prod+=v; else ship+=v;
+    });
+  });
+
+  const rec = { date, ampm, cat:currentCat, items:items.length, prod, ship, ts: Date.now() };
+  records.unshift(rec);
+  if(records.length>100) records.pop();
+  saveRecords();
+
+  // 저장 시 savedDays +1 (세션 내 카운트)
+  savedDays++;
+
+  updateSummary();
+  const synced = await saveAll();
+  showToast(synced ? '💾 저장 + ☁️ 동기화 완료!' : '💾 저장 완료');
+}
+
+// ══════════════════════════════════════════
+// 초기화
+// ══════════════════════════════════════════
+function confirmReset() {
+  document.getElementById('resetCatName').textContent = currentCat;
+  openModal('resetOverlay');
+}
+async function doReset() {
+  const items = catData[currentCat]||[];
+  items.forEach(name=>{
+    COLS.forEach(col=>setInput(currentCat,name,col,0));
+  });
+  saveInputData();
+  // 클라우드에도 즉시 덮어써서 폴링이 이전 값을 복구하지 못하게 함
+  await cloudSave({ inputData, memos, records, prices: PRICES });
+  closeModal('resetOverlay');
+  renderMainTable();
+  updateSummary();
+  showToast('초기화 완료');
+}
+
+// ══════════════════════════════════════════
+// CSV 내보내기
+// ══════════════════════════════════════════
+function exportCSV() {
+  const date = document.getElementById('dateInput').value;
+  const ampm = document.getElementById('ampmSelect').value;
+  let csv = `날짜,시간대,분류,제품명,${COLS.join(',')}\n`;
+
+  CATS.forEach(cat=>{
+    (catData[cat]||[]).forEach(name=>{
+      const vals = COLS.map(col=>getInput(cat,name,col));
+      csv += `${date},${ampm},${cat},${name},${vals.join(',')}\n`;
+    });
+  });
+
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `생산일지_${date}_${ampm}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast('CSV 다운로드 완료');
+}
+
+// ══════════════════════════════════════════
+// 목록·항목 수정 팝업
+// ══════════════════════════════════════════
+function openEditItems() {
+  document.getElementById('editModalTitle').textContent = `📂 ${currentCat} — 품목 수정`;
+  document.getElementById('addItemInput').value = '';
+  document.getElementById('addPosInput').value = '';
+  renderEditList();
+  openModal('editOverlay');
+}
+
+function renderEditList() {
+  const ul = document.getElementById('editItemList');
+  const empty = document.getElementById('editEmpty');
+  ul.innerHTML = '';
+  const items = catData[currentCat]||[];
+  if(!items.length) { empty.style.display='block'; return; }
+  empty.style.display = 'none';
+
+  items.forEach((name, idx) => {
+    const li = document.createElement('li');
+    li.dataset.idx = idx;
+    li.draggable = true;
+    li.innerHTML = `
+      <span class="drag-handle" title="드래그로 순서 변경">⠿</span>
+      <span class="item-idx">${idx+1}</span>
+      <input class="item-input" type="text" value="${name}" data-idx="${idx}">
+      <button class="item-del" title="삭제" onclick="deleteItem(${idx})">✕</button>`;
+
+    // 드래그 이벤트
+    li.addEventListener('dragstart', e => {
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', idx);
+      setTimeout(() => li.classList.add('dragging'), 0);
+    });
+    li.addEventListener('dragend', () => {
+      li.classList.remove('dragging');
+      document.querySelectorAll('#editItemList li').forEach(el => el.classList.remove('drag-over-top'));
+    });
+    li.addEventListener('dragover', e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      document.querySelectorAll('#editItemList li').forEach(el => el.classList.remove('drag-over-top'));
+      li.classList.add('drag-over-top');
+    });
+    li.addEventListener('dragleave', () => li.classList.remove('drag-over-top'));
+    li.addEventListener('drop', e => {
+      e.preventDefault();
+      const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+      const toIdx = parseInt(li.dataset.idx);
+      if (fromIdx === toIdx) return;
+      // 현재 편집 내용 먼저 수집
+      collectCurrentEdits();
+      const items = catData[currentCat];
+      const moved = items.splice(fromIdx, 1)[0];
+      const insertAt = fromIdx < toIdx ? toIdx - 1 : toIdx;
+      items.splice(insertAt, 0, moved);
+      renderEditList();
+    });
+
+    ul.appendChild(li);
+  });
+}
+
+// 현재 입력값 즉시 catData에 반영
+function collectCurrentEdits() {
+  const inputs = document.querySelectorAll('#editItemList .item-input');
+  const items = catData[currentCat];
+  inputs.forEach(inp => {
+    const i = parseInt(inp.dataset.idx);
+    if (items[i] !== undefined) items[i] = inp.value.trim() || items[i];
+  });
+}
+
+
+function deleteItem(idx) {
+  collectCurrentEdits();
+  catData[currentCat].splice(idx, 1);
+  renderEditList();
+}
+
+function addItem() {
+  const inp = document.getElementById('addItemInput');
+  const posInp = document.getElementById('addPosInput');
+  const val = inp.value.trim();
+  if (!val) { inp.focus(); return; }
+  collectCurrentEdits();
+  if (!catData[currentCat]) catData[currentCat] = [];
+  const items = catData[currentCat];
+  const posVal = posInp.value.trim();
+  if (posVal !== '') {
+    let pos = parseInt(posVal);
+    if (isNaN(pos) || pos < 1) pos = 1;
+    if (pos > items.length + 1) pos = items.length + 1;
+    items.splice(pos - 1, 0, val); // pos번째 앞에 삽입
+  } else {
+    items.push(val);
+  }
+  inp.value = '';
+  posInp.value = '';
+  renderEditList();
+  // 추가된 항목으로 스크롤
+  const ul = document.getElementById('editItemList');
+  const targetIdx = posVal !== '' ? (parseInt(posVal)||1) - 1 : items.length - 1;
+  const lis = ul.querySelectorAll('li');
+  if (lis[targetIdx]) lis[targetIdx].scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+document.getElementById('addItemInput').addEventListener('keydown', e => { if (e.key==='Enter') addItem(); });
+document.getElementById('addPosInput').addEventListener('keydown', e => { if (e.key==='Enter') addItem(); });
+
+function saveItems() {
+  collectCurrentEdits();
+  // 빈 값 제거
+  catData[currentCat] = (catData[currentCat]||[]).filter(v => v && v.trim());
+  saveCatData();
+  closeModal('editOverlay');
+  renderCatGrid();
+  renderMainTable();
+  updateCurrentBar();
+  showToast('품목 저장 완료');
+}
+
+// ══════════════════════════════════════════
+// 메모 팝업
+// ══════════════════════════════════════════
+function openMemo(cat, name, key) {
+  currentMemoKey = key;
+  document.getElementById('memoProductName').textContent = `${cat} > ${name}`;
+  document.getElementById('memoText').value = memos[key]||'';
+  openModal('memoOverlay');
+}
+
+function saveMemo() {
+  const val = document.getElementById('memoText').value.trim();
+  if(val) memos[currentMemoKey]=val;
+  else delete memos[currentMemoKey];
+  saveMemos();
+  closeModal('memoOverlay');
+  renderMainTable();
+  showToast('메모 저장 완료');
+}
+
+// ══════════════════════════════════════════
+// 기록 팝업
+// ══════════════════════════════════════════
+function openRecord() {
+  const body = document.getElementById('recordBody');
+  if(!records.length) {
+    body.innerHTML = `<div class="record-empty">저장된 기록이 없습니다.<br>💾 저장 버튼을 눌러 기록을 남기세요.</div>`;
+    openModal('recordOverlay'); return;
+  }
+  let html = `<table class="record-table"><thead><tr>
+    <th>날짜</th><th>시간대</th><th>분류</th><th>품목수</th><th>생산합계</th><th>출고합계</th>
+  </tr></thead><tbody>`;
+  records.forEach(r=>{
+    html += `<tr>
+      <td>${r.date||'-'}</td><td>${r.ampm||'-'}</td>
+      <td>${r.cat||'-'}</td><td>${r.items||0}개</td>
+      <td style="color:#1976D2;font-weight:bold;">${r.prod||0}</td>
+      <td style="color:#388E3C;font-weight:bold;">${r.ship||0}</td>
+    </tr>`;
+  });
+  html += '</tbody></table>';
+  body.innerHTML = html;
+  openModal('recordOverlay');
+}
+
+function clearAllRecords() {
+  if(!confirm('모든 기록을 삭제하시겠습니까?')) return;
+  records=[];
+  saveRecords();
+  openRecord();
+  showToast('기록 삭제 완료');
+}
+
+// ══════════════════════════════════════════
+// 설정 팝업
+// ══════════════════════════════════════════
+// openSettings → 위에서 재정의됨
+
+// ══════════════════════════════════════════
+// 클라우드 설정 UI 함수
+// ══════════════════════════════════════════
+function openSettings() {
+  document.getElementById('settingAutoSave').checked = autoSave;
+  const storedKey = localStorage.getItem('cloudApiKey') || '';
+  const storedBin = localStorage.getItem('cloudBinId')  || '';
+  document.getElementById('inputApiKey').value = storedKey;
+  document.getElementById('inputBinId').value  = storedBin;
+  const st = document.getElementById('cloudStatus');
+  if (storedKey && storedBin) {
+    st.textContent = '✅ 클라우드 연결 설정됨';
+    st.style.color = '#388E3C';
+  } else {
+    st.textContent = '⚠️ 아직 설정되지 않음 (로컬 저장만 사용 중)';
+    st.style.color = '#F57C00';
+  }
+  openModal('settingsOverlay');
+}
+
+function toggleApiKeyVis() {
+  const inp = document.getElementById('inputApiKey');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+function saveCloudSettings() {
+  const key = document.getElementById('inputApiKey').value.trim();
+  const bin = document.getElementById('inputBinId').value.trim();
+  localStorage.setItem('cloudApiKey', key);
+  localStorage.setItem('cloudBinId',  bin);
+  // 전역 변수도 갱신
+  window.location.reload();
+}
+
+async function testCloudConnection() {
+  const key = document.getElementById('inputApiKey').value.trim();
+  const bin = document.getElementById('inputBinId').value.trim();
+  const st  = document.getElementById('cloudStatus');
+  if (!key || !bin) { st.textContent = '❌ API Key와 Bin ID를 먼저 입력하세요.'; st.style.color='#e53935'; return; }
+  st.textContent = '🔄 연결 테스트 중...'; st.style.color='#888';
+  try {
+    const r = await fetch(`https://api.jsonbin.io/v3/b/${bin}/latest`, {
+      headers: { 'X-Master-Key': key }
+    });
+    if (r.ok) {
+      st.textContent = '✅ 연결 성공! 저장 버튼을 눌러 적용하세요.';
+      st.style.color = '#388E3C';
+    } else {
+      st.textContent = `❌ 연결 실패 (${r.status}) — API Key / Bin ID 확인하세요.`;
+      st.style.color = '#e53935';
+    }
+  } catch(e) {
+    st.textContent = '❌ 네트워크 오류: ' + e.message;
+    st.style.color = '#e53935';
+  }
+}
+
+async function autoCreateBin() {
+  const key = document.getElementById('inputApiKey').value.trim();
+  const st  = document.getElementById('cloudStatus');
+  if (!key) { st.textContent = '❌ API Key를 먼저 입력하세요.'; st.style.color='#e53935'; return; }
+  st.textContent = '🔄 Bin 자동 생성 중...'; st.style.color='#888';
+  const binId = await cloudCreate(key);
+  if (binId) {
+    document.getElementById('inputBinId').value = binId;
+    st.textContent = `✅ Bin 생성 완료! ID: ${binId}  →  저장 버튼 클릭`;
+    st.style.color = '#388E3C';
+  } else {
+    st.textContent = '❌ 생성 실패 — API Key를 확인하세요.';
+    st.style.color = '#e53935';
+  }
+}
+
+function toggleAutoSave() {
+  autoSave = document.getElementById('autoSaveToggle').checked;
+  document.getElementById('autoSaveLabel').textContent = autoSave?'활성':'비활성';
+  document.getElementById('autoSaveLabel').style.color = autoSave?'#1976D2':'#e53935';
+}
+
+function resetSavedDays() {
+  savedDays=0;
+  updateSummary();
+  showToast('저장일 초기화 완료');
+}
+
+function resetAllData() {
+  if(!confirm('모든 데이터(입력값, 품목, 기록)를 초기화하시겠습니까?\n이 작업은 되돌릴 수 없습니다.')) return;
+  catData   = defaultCatData();
+  catMeta   = defaultCatMeta();
+  inputData = {};
+  memos     = {};
+  records   = [];
+  savedDays = 0;
+  saveInputData(); saveMemos(); saveRecords();
+  closeModal('settingsOverlay');
+  renderCatGrid();
+  renderMainTable();
+  updateCurrentBar();
+  updateSummary();
+  showToast('전체 초기화 완료');
+}
+
+// ══════════════════════════════════════════
+// 총 입력 팝업
+// ══════════════════════════════════════════
+function openBulkInput() {
+  const body = document.getElementById('bulkBody');
+  body.innerHTML = '';
+  CATS.forEach(cat=>{
+    const items = catData[cat]||[];
+    if(!items.length) return;
+    const section = document.createElement('div');
+    section.className = 'bulk-section';
+    let html = `<div class="bulk-section-title">📂 ${cat}</div><div class="bulk-grid" style="grid-template-columns:1fr 80px;gap:6px 10px;">`;
+    items.forEach(name=>{
+      const v = getInput(cat,name,'생산');
+      html += `<div class="bulk-name">${name}</div>
+        <input class="bulk-input" type="number" min="0" value="${v}"
+          data-cat="${cat}" data-name="${name}" data-col="생산">`;
+    });
+    html += '</div>';
+    section.innerHTML = html;
+    body.appendChild(section);
+  });
+  openModal('bulkOverlay');
+}
+
+function applyBulk() {
+  document.querySelectorAll('#bulkBody .bulk-input').forEach(inp=>{
+    const cat=inp.dataset.cat, name=inp.dataset.name, col=inp.dataset.col;
+    setInput(cat, name, col, parseInt(inp.value)||0);
+  });
+  saveInputData();
+  renderMainTable();
+  closeModal('bulkOverlay');
+  showToast('총 입력 적용 완료');
+}
+
+// ══════════════════════════════════════════
+// 팝업 유틸
+// ══════════════════════════════════════════
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+function overlayClick(e, id) { if(e.target===document.getElementById(id)) closeModal(id); }
+
+// ══════════════════════════════════════════
+// Toast
+// ══════════════════════════════════════════
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2000);
+}
+
+// ══════════════════════════════════════════
+// 자동저장 토글
+// ══════════════════════════════════════════
+document.getElementById('autoSaveToggle').addEventListener('change', toggleAutoSave);
+
+// ══════════════════════════════════════════
+// 0.1초 디바운스 push
+// ══════════════════════════════════════════
+let _pushTimer = null;
+function scheduleCloudPush() {
+  clearTimeout(_pushTimer);
+  _pushTimer = setTimeout(async () => {
+    await cloudSave({ inputData, memos, records, prices: PRICES });
+  }, 100);
+}
+
+// ══════════════════════════════════════════
+// 초기 렌더
+// ══════════════════════════════════════════
+// ── 수량 전체 0 초기화 ──
+(function resetAllInputToZero() {
+  inputData = {};
+  CATS.forEach(cat => {
+    (catData[cat] || []).forEach(name => {
+      COLS.forEach(col => setInput(cat, name, col, 0));
+    });
+  });
+  saveInputData();
+})();
+
+renderCatGrid();
+renderMainTable();
+updateCurrentBar();
+updateSummary();
+
+// ══════════════════════════════════════════
+// Firebase 시작 + 1초 폴링
+// ══════════════════════════════════════════
+(async () => {
+  const badge = document.getElementById('cloudBadge');
+  if (badge) badge.innerHTML = '☁️ <span style="color:#1976D2;">연결 중...</span>';
+
+  const ok = await loadFromCloud();
+  // 수량은 항상 0으로 유지 (이미 초기화됨), 판매가·메모·기록만 사용
+  inputData = {};
+  CATS.forEach(cat => {
+    (catData[cat] || []).forEach(name => {
+      COLS.forEach(col => setInput(cat, name, col, 0));
+    });
+  });
+  saveInputData();
+  await cloudSave({ inputData, memos, records, prices: PRICES });
+  if (ok) {
+    renderMainTable();
+    updateSummary();
+    if (badge) badge.innerHTML = '☁️ <span style="color:#388E3C;">연결됨 ✓</span>';
+    showToast('✅ 데이터 로드 완료');
+  } else {
+    if (badge) badge.innerHTML = '☁️ <span style="color:#388E3C;">준비됨</span>';
+  }
+
+  // 1초마다 다른 기기 변경사항 pull
+  let _lastSnap = JSON.stringify({ inputData, memos, records, prices: PRICES });
+  setInterval(async () => {
+    const data = await cloudLoad();
+    if (!data) return;
+    const snap = JSON.stringify(data);
+    if (snap === _lastSnap) return;
+    _lastSnap = snap;
+    let changed = false;
+    if (data.inputData && JSON.stringify(data.inputData) !== JSON.stringify(inputData)) {
+      inputData = data.inputData; saveInputData(); changed = true;
+    }
+    if (data.memos && JSON.stringify(data.memos) !== JSON.stringify(memos)) {
+      memos = data.memos; saveMemos(); changed = true;
+    }
+    if (data.records && JSON.stringify(data.records) !== JSON.stringify(records)) {
+      records = data.records; saveRecords(); changed = true;
+    }
+    if (data.prices && JSON.stringify(data.prices) !== JSON.stringify(PRICES)) {
+      PRICES = data.prices; savePrices(); changed = true;
+    }
+    if (changed) { renderMainTable(); updateSummary(); showToast('🔄 동기화됨'); _lastSnap = JSON.stringify({ inputData, memos, records, prices: PRICES }); }
+  }, 1000);
+})();
+</script>
+</body>
+</html>
